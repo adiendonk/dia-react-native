@@ -1,0 +1,154 @@
+.command-history {
+  margin-top: 30px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.history-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.clear-button {
+  background-color: rgba(231, 76, 60, 0.7);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.clear-button:hover {
+  background-color: rgba(231, 76, 60, 1);
+}
+
+.empty-history {
+  text-align: center;
+  padding: 30px;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.history-item.user {
+  background-color: rgba(74, 144, 226, 0.2);
+}
+
+.history-item.assistant {
+  background-color: rgba(46, 204, 113, 0.2);
+}
+
+.history-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.message-content {
+  flex-grow: 1;
+  text-align: left;
+  word-break: break-word;
+  padding-right: 10px;
+}
+
+.message-time {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .command-history {
+    padding: 15px;
+  }
+  
+  .history-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .history-item {
+    padding: 10px;
+  }
+  
+  .message-content {
+    font-size: 0.9rem;
+  }
+  
+  .clear-button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .command-history {
+    padding: 10px;
+    margin-top: 20px;
+  }
+  
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .history-header h3 {
+    font-size: 1rem;
+  }
+  
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    padding: 8px;
+  }
+  
+  .message-content {
+    font-size: 0.85rem;
+  }
+  
+  .message-time {
+    align-self: flex-end;
+    font-size: 0.7rem;
+  }
+  
+  .clear-button {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-height: 700px) and (max-width: 768px) {
+  .history-list {
+    max-height: 200px;
+  }
+  
+  .history-item {
+    padding: 6px 8px;
+  }
+}
