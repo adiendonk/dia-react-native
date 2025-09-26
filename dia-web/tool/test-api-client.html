@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRouter WebSocket Test Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OpenRouter WebSocket Test Client</h1>
+        
+        <div class="form-group">
+            <label for="websocketUrl">WebSocket URL:</label>
+            <input type="text" id="websocketUrl" value="wss://openrouter-websocket-proxy-production.adhie-arysanto.workers.dev" placeholder="Enter your WebSocket URL">
+        </div>
+        
+        <div class="status disconnected" id="connectionStatus">
+            Disconnected
+        </div>
+        
+        <div class="form-group">
+            <button id="connectBtn" onclick="connectWebSocket()">Connect</button>
+            <button id="disconnectBtn" onclick="disconnectWebSocket()" disabled>Disconnect</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="messageInput">Message to OpenRouter:</label>
+            <textarea id="messageInput" placeholder='Enter JSON message (e.g., {"messages": [{"role": "user", "content": "Hello!"}]})'>
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello, how are you?"
+    }
+  ]
+}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <button id="sendBtn" onclick="sendMessage()" disabled>Send Message</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="responseOutput">OpenRouter Response:</label>
+            <div class="response" id="responseOutput">No response yet...</div>
+        </div>
+        
+        <div class="error" id="errorOutput"></div>
+    </div>
+
+    <script>
+        let websocket = null;
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const responseOutput = document.getElementById('responseOutput');
+        const errorOutput = document.getElementById('errorOutput');
+        const websocketUrlInput = document.getElementById('websocketUrl');
+        const messageInput = document.getElementById('messageInput');
+
+        function updateConnectionStatus(status, message) {
+            connectionStatus.textContent = message;
+            connectionStatus.className = 'status ' + status;
+            
+            // Update button states
+            connectBtn.disabled = status === 'connected' || status === 'connecting';
+            disconnectBtn.disabled = status !== 'connected';
+            sendBtn.disabled = status !== 'connected';
+        }
+
+        function connectWebSocket() {
+            const url = websocketUrlInput.value.trim();
+            if (!url) {
+                showError('Please enter a WebSocket URL');
+                return;
+            }
+
+            updateConnectionStatus('connecting', 'Connecting...');
+            errorOutput.textContent = '';
+
+            try {
+                websocket = new WebSocket(url);
+                
+                websocket.onopen = function(event) {
+                    updateConnectionStatus('connected', 'Connected to WebSocket');
+                    console.log('WebSocket connection established');
+                };
+                
+                websocket.onmessage = function(event) {
+                    try {
+                        const response = JSON.parse(event.data);
+                        responseOutput.textContent = JSON.stringify(response, null, 2);
+                        console.log('Received response:', response);
+                    } catch (error) {
+                        responseOutput.textContent = 'Non-JSON response: ' + event.data;
+                        console.log('Received non-JSON response:', event.data);
+                    }
+                };
+                
+                websocket.onerror = function(error) {
+                    showError('WebSocket error: ' + error);
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus('disconnected', 'Connection error');
+                };
+                
+                websocket.onclose = function(event) {
+                    updateConnectionStatus('disconnected', 'Disconnected');
+                    console.log('WebSocket connection closed:', event.code, event.reason);
+                };
+            } catch (error) {
+                showError('Failed to create WebSocket: ' + error.message);
+                updateConnectionStatus('disconnected', 'Connection failed');
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus('disconnected', 'Disconnected');
+        }
+
+        function sendMessage() {
+            if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                showError('WebSocket is not connected');
+                return;
+            }
+
+            const message = messageInput.value.trim();
+            if (!message) {
+                showError('Please enter a message to send');
+                return;
+            }
+
+            try {
+                // Try to parse as JSON to validate
+                JSON.parse(message);
+                websocket.send(message);
+                errorOutput.textContent = '';
+                console.log('Message sent:', message);
+            } catch (error) {
+                showError('Invalid JSON format: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            errorOutput.textContent = message;
+            console.error('Error:', message);
+        }
+
+        // Allow sending message with Enter key
+        messageInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize connection status
+        updateConnectionStatus('disconnected', 'Disconnected');
+    </script>
+</body>
+</html>
